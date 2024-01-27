@@ -13,7 +13,7 @@ export default function CustomNav() {
                   <p className='tracking-tight text-xl font-bold'>Flow Jobs</p>
               </Link>
               <Button asChild>
-                  <Link href={'/jpbs/new'}>Post a Job</Link>
+                  <Link href={'/jobs/new'}>Post a Job</Link>
               </Button>
   </nav>
     </header>
