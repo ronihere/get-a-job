@@ -3,9 +3,19 @@ import { jobTypes, locationTypes } from './utils'
 
 const requiredString = z.string().min(1, 'required')
 
-const companyLogoSchema = z.custom<File | undefined>().refine(file => !file || file instanceof File && file.type.startsWith("image/"), "must be an image file").refine(file => {
-    return !file || file.size <1024 * 1024 * 2
-}, 'File must be less than 2MB')
+// const companyLogoSchema = z.custom<File | undefined>().refine(file => !file || (file instanceof File && file.type.startsWith("image/")), "must be an image file").refine(file => {
+//     return !file || file.size <1024 * 1024 * 2
+// }, 'File must be less than 2MB')
+
+const companyLogoSchema = z
+  .custom<File | undefined>()
+//   .refine(
+//     (file) => !file || (file instanceof File && file.type.startsWith("image/")),
+//     "Must be an image file",
+//   )
+//   .refine((file) => {
+//     return !file || file.size < 1024 * 1024 * 2;
+//   }, "File must be less than 2MB");
 
 const applicationSchema = z.object({
     applicationEmail: z.string().max(100).email().optional().or(z.literal("")),
@@ -29,7 +39,8 @@ export const createJobSchema = z.object({
     type: requiredString.refine(value => jobTypes.includes(value), 'Invalid job type!'),
     companyName: requiredString.max(100),
     companyLogo: companyLogoSchema,
-    salary : numericRequiredString.max(9,'Number must be less than 9 digits'),
+    salary: numericRequiredString.max(9, 'Number must be less than 9 digits'),
+    description: requiredString.max(500)
 })
     .and(applicationSchema)
     .and(locationSchema)

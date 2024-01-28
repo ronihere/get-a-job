@@ -27,3 +27,10 @@ export const jobTypes = [
 ];
 
 export const locationTypes = ["Remote", "On-site", "Hybrid"];
+
+export function toSlug(str: string) {
+  return str
+    .toLowerCase()
+    .replace(/ /g, "-")
+    .replace(/[^\w-]+/g, "");
+}

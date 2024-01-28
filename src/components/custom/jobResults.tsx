@@ -5,9 +5,9 @@ import { jobFilterSchemaType } from '@/lib/validation'
 type JobReasultsProps = {
     filterValues: jobFilterSchemaType
 }
+export const dynamic = 'force-dynamic';
 export default async function JobResults({ filterValues: { q, jobtypes, location, remote } }: JobReasultsProps) {
     const searchSting = q?.split(' ').filter((word) => (word.length > 0)).join(' & ');
-    console.log('ss:::', q, jobtypes , location , remote)
 
     const searchFilter: Prisma.JobWhereInput = searchSting ?
         {
@@ -28,7 +28,7 @@ export default async function JobResults({ filterValues: { q, jobtypes, location
             jobtypes ? {type: jobtypes} : {},
             location ? { location } : {},
             remote ? {locationType : 'remote'} : {},
-            {approved : true}
+            // {approved : true }
         ]
     }
 
@@ -36,6 +36,7 @@ export default async function JobResults({ filterValues: { q, jobtypes, location
         where,
         orderBy: { createdAt: 'asc' }
     })
+    console.log('jobs:::', jobs.length)
   return (
       <div className="grow space-y-4">
           {

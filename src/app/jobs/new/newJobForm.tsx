@@ -9,16 +9,38 @@ import { Input } from "@/components/ui/input"
 import Select from "@/components/ui/select"
 import { jobTypes, locationTypes } from "@/lib/utils"
 import LocationSerachInput from "@/components/custom/LocationSerachInput"
+import { X } from "lucide-react"
+import { Label } from "@radix-ui/react-label"
+import RickTextEditor from "@/components/custom/RickTextEditor"
+import { draftToMarkdown } from "markdown-draft-js"
+import LoadingButton from "@/components/custom/LoadingButton"
+import { createJobPosting } from "./action"
 
 export default function NewJobForm() {
     const form = useForm<createJobSchemaTypes>({
         resolver: zodResolver(createJobSchema)
     })
-    const { handleSubmit,watch, register, formState: { isSubmitting, errors },setValue,
+    const { handleSubmit, watch, register, formState: { isSubmitting, errors }, setFocus, setValue,
         reset, trigger, control } = form;
-    
-    const onSubmit = (data : createJobSchemaTypes) => {
-        console.log(JSON.stringify(data , null ,2))
+
+    async function onSubmit(values: createJobSchemaTypes){
+        const formData = new FormData();
+
+        Object.entries(values).forEach(([key, value]) => {
+            // console.log('value', value);
+            if (value) {
+                // console.log('inside')
+                formData.append(key, value);
+            }
+        });
+        console.log('email::', JSON.stringify(values.applicationEmail, null, 4))
+
+        console.log('desc::', JSON.stringify(values.description, null, 4))
+        try {
+            await createJobPosting(formData);
+        } catch (error) {
+            alert("Something went wrong, please try again.");
+        }
     }
     return <main className="max-w-3xl m-auto my-10 space-y-10">
         <div className="space-y-5 text-center">
@@ -39,7 +61,7 @@ export default function NewJobForm() {
                 </p>
             </div>
             <Form {...form}>
-                <form noValidate className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+                <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
                     <FormField
                         control={control}
                         name='title'
@@ -49,12 +71,12 @@ export default function NewJobForm() {
                                 <FormControl>
                                     <Input placeholder="e.g. Frontend Developer" {...field} />
                                 </FormControl>
-                                <FormMessage/>
+                                <FormMessage />
                             </FormItem>
                         )}
                     >
 
-                        
+
 
                     </FormField>
                     <FormField
@@ -64,12 +86,12 @@ export default function NewJobForm() {
                             <FormItem>
                                 <FormLabel>Job Types</FormLabel>
                                 <FormControl>
-                                    <Select>
+                                    <Select {...field}>
                                         <option hidden>Select an option</option>
-                                        {jobTypes.map(ele => <option key={ele}>{ele }</option>)}
+                                        {jobTypes.map(ele => <option key={ele}>{ele}</option>)}
                                     </Select>
                                 </FormControl>
-                                <FormMessage/>
+                                <FormMessage />
                             </FormItem>
                         )}
                     >
@@ -93,18 +115,21 @@ export default function NewJobForm() {
                     <FormField
                         name='companyLogo'
                         control={control}
-                        render={({ field :{value , ...rest} }) => (
+                        render={({ field: { value, ...rest } }) => (
                             <FormItem>
                                 <FormLabel>
-                                Company Logo
+                                    Company Logo
                                 </FormLabel>
                                 <FormControl>
-                                    <Input type="file" {...rest} accept="image/*" />
+                                    <Input type="file" {...rest} onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        rest.onChange(file);
+                                    }} accept="image/*" />
                                 </FormControl>
                             </FormItem>
                         )}
-                     >
-                        
+                    >
+
                     </FormField>
 
                     <FormField
@@ -114,7 +139,7 @@ export default function NewJobForm() {
                             <FormItem>
                                 <FormLabel>Location Types</FormLabel>
                                 <FormControl>
-                                    <Select>
+                                    <Select {...field}>
                                         <option hidden>Select an option</option>
                                         {locationTypes.map(ele => <option key={ele}>{ele}</option>)}
                                     </Select>
@@ -134,17 +159,93 @@ export default function NewJobForm() {
                                     Location
                                 </FormLabel>
                                 <FormControl>
-                                    <LocationSerachInput onLocationSelected={(location : string)=> console.log(location)} placeholder='search for a location' {...field} />
+                                    <LocationSerachInput onLocationSelected={field.onChange} placeholder='search for a location' {...field} />
                                 </FormControl>
-                                {/* {watch('location')} */}
-                                <FormMessage/>
-                                </FormItem>
+
+                                {watch('location') &&
+                                    <button className="flex gap-2 shadow-sm" onClick={() => setValue("location", "", { shouldValidate: true })}>
+                                        <p>{watch('location')}</p>
+                                        <X size={14} className="bg-muted border" />
+                                    </button>
+                                }
+                                <FormMessage />
+                            </FormItem>
                         )}
                     >
 
                     </FormField>
-</form>
+
+
+                    <div className="space-y-4">
+                        <Label htmlFor="applicationEmail">How to apply</Label>
+                        <div className="flex justify-between items-center gap-2">
+
+                            <FormField control={control} name="applicationEmail" render={({ field }) => (
+                                <FormItem className="grow">
+
+                                    <FormControl>
+                                        <Input type="email" placeholder="Email" id="applicationEmail" {...field} />
+                                    </FormControl>
+                                </FormItem>
+                            )}>
+                            </FormField>
+                            <div>Or</div>
+                            <FormField control={control} name="applicationUrl" render={({ field }) => (
+                                <FormItem className="grow">
+                                    <FormControl>
+                                        <Input type="url" placeholder="Website" id="applicationUrl" {...field}
+                                            onChange={(e) => {
+                                                field.onChange(e);
+                                                trigger('applicationEmail')
+                                            }} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}>
+
+                            </FormField>
+                        </div>
+                    </div>
+
+                        <FormField
+                            control={control}
+                            name="salary"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Salary</FormLabel>
+                                    <FormControl>
+                                        <Input type="number" placeholder="salary" {...field} />
+                                    </FormControl>
+                                    <FormMessage/>
+                                </FormItem>
+                            )
+                            }
+                        >
+                        </FormField>
+
+                        <FormField
+                            control={control}
+                            name="description"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <Label htmlFor="description" onClick={() => setFocus('description')}>Description</Label>
+                                    <FormControl>
+
+                                        <RickTextEditor {...field} onChange={(draft) => {
+                                            field.onChange(draftToMarkdown(draft))
+                                        }} ref={field.ref} />
+                                    </FormControl>
+                                        <FormMessage/>
+                                </FormItem>
+                            )
+                            }
+                        >
+                        </FormField>
+
+                    <LoadingButton type="submit" loading={isSubmitting}>Submit</LoadingButton>
+                </form>
             </Form>
         </div>
     </main>
 }
+
