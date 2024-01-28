@@ -33,7 +33,7 @@ return (
         <div className='h-full w-full rounded-b-lg border'>
             {
                 open && cities.map((city) =>
-                    <div className='w-[100%] text-start p-3 shadow-sm hover:bg-muted' onMouseDown={(e) => {
+                    <div key={city} className='w-[100%] text-start p-3 shadow-sm hover:bg-muted' onMouseDown={(e) => {
                         e.preventDefault();
                         onLocationSelected(city);
                         setLocationSearchinput('');
