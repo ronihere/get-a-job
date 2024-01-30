@@ -2,6 +2,7 @@ import prisma from '@/lib/prisma'
 import { Job, Prisma } from '@prisma/client'
 import JobListItems from './JobListItems'
 import { jobFilterSchemaType } from '@/lib/validation'
+import Link from 'next/link'
 type JobReasultsProps = {
     filterValues: jobFilterSchemaType
 }
@@ -42,7 +43,9 @@ export default async function JobResults({ filterValues: { q, jobtypes, location
           {
               jobs.map((job: Job) => {
                   return (
-                      <JobListItems key={job.id} job={job} />
+                      <Link key={job.id} href={`/jobs/${job.slug}`} className='block'>
+                      <JobListItems  job={job} />
+                      </Link>
                   )
               })
           }
